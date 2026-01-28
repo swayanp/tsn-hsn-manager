@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TSN / HSN Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>TSN / HSN Manager</h1>
+
+<!-- ================= Upload Section ================= -->
+<section>
+    <h2>Upload Identifiers</h2>
+
+    <label>Product:</label>
+    <select id="product">
+        <option>EDGE_CABLE</option>
+        <option>EDGE_ANTENNA</option>
+        <option>MINI_LUX</option>
+        <option>STREAM_4K</option>
+    </select>
+
+    <label>Type:</label>
+    <select id="type">
+        <option>TSN</option>
+        <option>HSN</option>
+    </select>
+
+    <input type="file" id="file">
+    <button onclick="upload()">Upload</button>
+
+    <div id="uploadResult" class="message"></div>
+</section>
+
+<!-- ================= Get Identifier Section ================= -->
+<section>
+    <h2>Get Identifier</h2>
+
+    <div class="button-group">
+        <button onclick="getNext('EDGE_CABLE','TSN')">Get Edge Cable TSN</button>
+        <button onclick="getNext('EDGE_ANTENNA','TSN')">Get Edge Antenna TSN</button>
+        <button onclick="getNext('MINI_LUX','TSN')">Get Mini LUX TSN</button>
+        <button onclick="getNext('STREAM_4K','HSN')">Get Stream 4K HSN</button>
+    </div>
+
+    <div id="nextResult" class="message"></div>
+</section>
+
+<!-- ================= Dashboard Section ================= -->
+<section>
+    <h2>Inventory Dashboard</h2>
+    <button onclick="loadDashboard()">Refresh Dashboard</button>
+
+    <table id="dashboardTable">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Type</th>
+                <th>Total</th>
+                <th>Available</th>
+                <th>Used</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
