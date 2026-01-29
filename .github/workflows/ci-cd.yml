@@ -1,0 +1,77 @@
+name: TSN-HSN CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop, qa, main]
+
+env:
+  IMAGE_NAME: swayanp/tsn-hsn-manager
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:${{ steps.meta.outputs.tag }} .
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push image to Docker Hub
+        run: |
+          docker push $IMAGE_NAME:${{ steps.meta.outputs.tag }}
+
+      - name: Smoke test
+        run: |
+          docker run -d -p 8000:8000 \
+            -e DATABASE_PATH=/data/test.db \
+            $IMAGE_NAME:${{ steps.meta.outputs.tag }}
+          sleep 10
+          curl http://localhost:8000 || exit 1
+
+  deploy-dev:
+    needs: build
+    if: github.ref_name == 'develop'
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: DEV Deployment
+        run: |
+          echo "Deploying $IMAGE_NAME:${{ needs.build.outputs.image_tag }} to DEV"
+
+  deploy-qa:
+    needs: build
+    if: github.ref_name == 'qa'
+    runs-on: ubuntu-latest
+    environment: qa
+
+    steps:
+      - name: QA Deployment
+        run: |
+          echo "Deploying $IMAGE_NAME:${{ needs.build.outputs.image_tag }} to QA"
+
+  deploy-prod:
+    needs: build
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: PROD Deployment
+        run: |
+          echo "Deploying $IMAGE_NAME:${{ needs.build.outputs.image_tag }} to PROD"

@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  tsn-app:
+    build: .
+    container_name: tsn-hsn-manager
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_PATH=/data/identifiers.db
+    volumes:
+      - tsn_data:/data
+
+volumes:
+  tsn_data:
