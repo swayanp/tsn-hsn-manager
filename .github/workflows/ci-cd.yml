@@ -37,11 +37,22 @@ jobs:
 
       - name: Smoke test
         run: |
-          docker run -d -p 8000:8000 \
+          docker run -d --name app_test -p 8000:8000 \
             -e DATABASE_PATH=/data/test.db \
             $IMAGE_NAME:${{ steps.meta.outputs.tag }}
-          sleep 10
-          curl http://localhost:8000 || exit 1
+
+          echo "Waiting for app to start..."
+          for i in {1..12}; do
+            if curl -s http://localhost:8000 >/dev/null; then
+              echo "App is up!"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "App failed to start. Logs:"
+          docker logs app_test
+          exit 1
 
   deploy-dev:
     needs: build
