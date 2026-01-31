@@ -1,0 +1,38 @@
+name: CD - DEV
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # 3️⃣ Terraform Init
+      - name: Terraform Init
+        working-directory: infra/terraform
+        run: terraform init
+
+      # 4️⃣ Workspace = dev
+      - name: Terraform Workspace (dev)
+        working-directory: infra/terraform
+        run: |
+          terraform workspace select dev || terraform workspace new dev
+
+      # 5️⃣ Terraform Apply
+      - name: Terraform Apply (dev)
+        working-directory: infra/terraform
+        run: |
+          terraform apply -auto-approve \
+            -var-file=dev.tfvars \
+            -var="image_tag=${{ github.sha }}"
