@@ -1,32 +1,40 @@
 name: CD - DEV
 
 on:
-  push:
-    branches:
-      - develop
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 jobs:
   deploy-dev:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # 1️⃣ Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Set up Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
 
-      - name: Terraform Init
+      # 3️⃣ Terraform Init
+      - name: Terraform Init (DEV)
         working-directory: infra/terraform
         run: terraform init
 
-      - name: Select DEV workspace
+      # 4️⃣ Select or create DEV workspace
+      - name: Terraform Workspace Select (DEV)
         working-directory: infra/terraform
         run: |
           terraform workspace select dev || terraform workspace new dev
 
+      # 5️⃣ Terraform Apply (DEV)
       - name: Terraform Apply (DEV)
         working-directory: infra/terraform
-        run: terraform apply -auto-approve -var-file=dev.tfvars
+        run: |
+          terraform apply -auto-approve \
+            -var-file=dev.tfvars \
+            -var="image_tag=${{ github.sha }}"
