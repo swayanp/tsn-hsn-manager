@@ -1,40 +1,21 @@
-name: CD - DEV
+name: CD - DEV (Minimal Proof)
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  push:
+    branches: [develop]
 
 jobs:
-  deploy-dev:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  prove-terraform:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout code
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2️⃣ Set up Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
 
-      # 3️⃣ Terraform Init
-      - name: Terraform Init (DEV)
+      - name: PROOF: Terraform Init
         working-directory: infra/terraform
         run: terraform init
 
-      # 4️⃣ Select or create DEV workspace
-      - name: Terraform Workspace Select (DEV)
+      - name: PROOF: Terraform Plan (no vars)
         working-directory: infra/terraform
-        run: |
-          terraform workspace select dev || terraform workspace new dev
-
-      # 5️⃣ Terraform Apply (DEV)
-      - name: Terraform Apply (DEV)
-        working-directory: infra/terraform
-        run: |
-          terraform apply -auto-approve \
-            -var-file=dev.tfvars \
-            -var="image_tag=${{ github.sha }}"
+        run: terraform plan
